@@ -14,13 +14,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Namer App',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+      child: Consumer<MyAppState>(
+        builder: (context, appState, _) => MaterialApp(
+          title: 'Namer App',
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: appState.isDarkTheme 
+                ? ColorScheme.fromSeed(seedColor: Colors.grey, brightness: Brightness.dark)
+                : ColorScheme.fromSeed(seedColor: Colors.white),
+          ),
+          home: MyHomePage(),
         ),
-        home: MyHomePage(),
       ),
     );
   }
@@ -28,6 +32,7 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
+  var isDarkTheme = false;
 
   void getNext() {
     current = WordPair.random();
@@ -42,6 +47,11 @@ class MyAppState extends ChangeNotifier {
     } else {
       favorites.add(current);
     }
+    notifyListeners();
+  }
+
+  void toggleTheme() {
+    isDarkTheme = !isDarkTheme;
     notifyListeners();
   }
 }
@@ -64,6 +74,9 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         page = FavoritesPage();
         break;
+      case 2:
+        page = ThemeSettingsPage();
+        break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
@@ -83,6 +96,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   NavigationRailDestination(
                     icon: Icon(Icons.favorite),
                     label: Text('Favorites'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.brightness_6),
+                    label: Text('Theme'),
                   ),
                 ],
                 selectedIndex: selectedIndex,
@@ -203,6 +220,22 @@ class FavoritesPage extends StatelessWidget {
             title: Text(pair.asLowerCase),
           ),
       ],
+    );
+  }
+}
+
+class ThemeSettingsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
+    return Center(
+      child: ElevatedButton(
+        onPressed: () {
+          appState.toggleTheme();
+        },
+        child: Text(appState.isDarkTheme ? 'Switch to Light Theme' : 'Switch to Dark Theme'),
+      ),
     );
   }
 }
